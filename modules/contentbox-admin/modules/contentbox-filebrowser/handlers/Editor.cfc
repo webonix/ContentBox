@@ -1,28 +1,29 @@
 /**
-* My Event Handler Hint
+* ContentBox - A Modular Content Platform
+* Copyright since 2012 by Ortus Solutions, Corp
+* www.ortussolutions.com/products/contentbox
+* ---
+* Manages the image editor
 */
 component extends="coldbox.system.EventHandler"{
-
-	property name="FileUtils" inject="coldbox.system.core.util.FileUtils";
 
 	/**
 	* Index
 	*/
-	any function index( event, rc, prc ){
-		event.paramValue( "imagePath","" );
-		event.paramValue( "imageSrc","" );
-		event.paramValue( "imageName","" );
+	function index( event, rc, prc ){
+		event.paramValue( "imagePath","" )
+			.paramValue( "imageSrc","" )
+			.paramValue( "imageName","" );
 
-		var info=ImageInfo(rc.imagePath);
-		rc.width = info.width;
-		rc.height = info.height;
+		var info 		= ImageInfo( rc.imagePath );
+		rc.width 		= info.width;
+		rc.height 		= info.height;
 		rc.imageRelPath = rc.imageSrc;
-		rc.imageSrc = #event.buildLink( '' )# & rc.imageSrc;
+		rc.imageSrc 	= event.buildLink( '' ) & rc.imageSrc;
 
 		if( event.isAjax() ) {
 			event.renderData( data=renderView( view="editor/index", layout="ajax" ) );
-		}
-		else {
+		} else {
 			event.setView( view="editor/index", layout="ajax" );
 		}		
 	}
@@ -30,88 +31,92 @@ component extends="coldbox.system.EventHandler"{
 	/**
 	* Info
 	*/
-	any function info( event, rc, prc ){
-		event.paramValue( "imagePath","" );
-		event.paramValue( "imageSrc","" );
-		event.paramValue( "imageName","" );
+	function info( event, rc, prc ){
+		event.paramValue( "imagePath", "" )
+			.paramValue( "imageSrc", "" )
+			.paramValue( "imageName", "" );
 
-		var info=ImageInfo(rc.imagePath);
-		rc.width = info.width;
-		rc.height = info.height;
+		var info 		= ImageInfo( rc.imagePath );
+		rc.width 		= info.width;
+		rc.height 		= info.height;
 		rc.imageRelPath = rc.imageSrc;
-		rc.imageSrc = #event.buildLink( '' )# & rc.imageSrc;
+		rc.imageSrc 	= event.buildLink( '' ) & rc.imageSrc;
 		
-		prc.imgInfo = ImageInfo( rc.imageSrc );
+		prc.imageInfo = ImageInfo( rc.imageSrc );
 
 		if( event.isAjax() ) {
 			event.renderData( data=renderView( view="editor/info", layout="ajax" ) );
-		}
-		else {
+		} else {
 			event.setView( view="editor/info", layout="ajax" );
 		}		
 	}
 	
 	/**
-	* Index
+	* Crop an image
 	*/
-	any function crop( event, rc, prc ){
+	function crop( event, rc, prc ){
 		// params
-		event.paramValue( "imgX","" );
-		event.paramValue( "imgY","" );
-		event.paramValue( "width","" );
-		event.paramValue( "height","" );
-		event.paramValue( "imgLoc","" );
+		event.paramValue( "imageX", "" )
+			.paramValue( "imageY", "" )
+			.paramValue( "width", "" )
+			.paramValue( "height", "" )
+			.paramValue( "imageLocation", "" );
 
-		if ( len(rc.imgLoc) ){
+		if ( len( rc.imageLocation ) ){
+			// Cleanup random location
+			rc.imageLocation = listFirst( rc.imageLocation, "?" );
 
-		    // read the image and create a ColdFusion image object --->
-		    var sourceImage = ImageNew( imgLoc );
+		    // read the image and create a ColdFusion image object
+		    var sourceImage = ImageNew( rc.imageLocation );
 
-		    <!--- crop the image using the supplied coords
-		              from the url request --->
-		    ImageCrop(	sourceImage,
-	                        rc.imgX,
-	                        rc.imgY,
-	                        rc.width,
-	                        rc.height);
+		    // crop the image using the supplied coords from the url request
+		    ImageCrop(	
+		    	sourceImage,
+				rc.imageX,
+				rc.imageY,
+				rc.width,
+				rc.height
+			);
 
 		    cfimage (
 		        action = "writeToBrowser",
 		        source = sourceImage
 		    );
 
-		    abort;
-
+		    event.noRender();
 		}
 
 	}
 	
 	/**
-	* Index
+	* Scale Image
 	*/
-	any function imageScale( event, rc, prc ){
+	function scale( event, rc, prc ){
 		// params
-		event.paramValue( "width","" );
-		event.paramValue( "height","" );
-		event.paramValue( "imgLoc","" );
+		event.paramValue( "width", "" )
+			.paramValue( "height", "" )
+			.paramValue( "imageLocation", "" );
 
-		if ( len(rc.imgLoc) ){
+		if ( len( rc.imageLocation ) ){
+			// Cleanup random location
+			rc.imageLocation = listFirst( rc.imageLocation, "?" );
 
 		    // read the image and create a ColdFusion image object --->
-		    var sourceImage = ImageNew( imgLoc );
+		    var sourceImage = ImageNew( rc.imageLocation );
 
 		    // crop the image using the supplied coords from the url request 
-		    ImageResize(	sourceImage,
-	                        rc.width,
-	                        rc.height);
+		    ImageResize(	
+		    	sourceImage,
+	            rc.width,
+	            rc.height
+	        );
 
 		    cfimage (
 		        action = "writeToBrowser",
 		        source = sourceImage
 		    );
 
-		    abort;
-
+		    event.noRender();
 		}
 
 	}
@@ -119,18 +124,21 @@ component extends="coldbox.system.EventHandler"{
 	/**
 	* Index
 	*/
-	any function imageSave( event, rc, prc ){
+	function imageSave( event, rc, prc ){
 		// params
-		event.paramValue( "imgLoc","" );
-		event.paramValue( "imgPath","" );
-		event.paramValue( "imgName","" );
+		event.paramValue( "imageLocation", "" )
+			.paramValue( "imagePath", "" )
+			.paramValue( "imageName", "" );
 
-		if ( len(rc.imgLoc) ){
+		if ( len( rc.imageLocation ) ){
+			// Cleanup random location
+			rc.imageLocation 	= listFirst( rc.imageLocation, "?" );
 
-		    var sourceImage = ImageRead( rc.imgLoc );
-			var path = rc.filebrowser.settings.directoryRoot & "/cc.jpg";
+			// Read image
+		    var sourceImage 	= ImageRead( rc.imageLocation );
+			var path 			= rc.filebrowser.settings.directoryRoot & "/cc.jpg";
 
-		    imageWrite( sourceImage, getDirectoryFromPath(rc.imgPath) & rc.imgName );
+		    imageWrite( sourceImage, getDirectoryFromPath( rc.imagePath ) & rc.imageName );
 
 		}
 		event.noRender();
