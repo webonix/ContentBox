@@ -38,7 +38,7 @@ component accessors="true"{
 
 		transaction{
 			// process rerwite
-			if( arguments.setup.getFullRewrite() ){
+			if( arguments.setup.getFullrewrite() ){
 				processRewrite( arguments.setup );
 			}
 			// create roles
